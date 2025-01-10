@@ -21,21 +21,26 @@ $STD apt-get install -y \
   sudo \
   mc \
   nginx \
-  mysql-server \
+  mariadb-server \
   ca-certificates \
   gnupg
 msg_ok "Installed Dependencies"
 
 
-msg_info "Configuring MySQL"
+msg_info "Configuring Database"
+DB_NAME=ghost
+DB_USER=ghostuser
 DB_PASS=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | head -c13)
-$STD mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '$DB_PASS';"
-$STD mysql -u root -p"$DB_PASS" -e "FLUSH PRIVILEGES;"
+mariadb -u root -e "CREATE DATABASE $DB_NAME;"
+mariadb -u root -e "CREATE USER '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
+mariadb -u root -e "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'localhost'; FLUSH PRIVILEGES;"
+
 {
-    echo "MySQL-Credentials"
-    echo "Username: root"
-    echo "Password: $DB_PASS"
-} >> ~/mysql.creds
+    echo "Ghost-Credentials"
+    echo "Ghost Database User: $DB_USER"
+    echo "Ghost Database Password: $DB_PASS"
+    echo "Ghost Database Name: $DB_NAME"
+} >> ~/ghost.creds
 msg_ok "Configured MySQL"
 
 msg_info "Setting up Node.js Repository"
@@ -60,7 +65,7 @@ echo "ghost-user ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/ghost-user
 mkdir -p /var/www/ghost
 chown -R ghost-user:ghost-user /var/www/ghost
 chmod 775 /var/www/ghost
-sudo -u ghost-user -H sh -c "cd /var/www/ghost && ghost install --db=mysql --dbhost=localhost --dbuser=root --dbpass=$DB_PASS --dbname=ghost --url=http://localhost:2368 --no-prompt --no-setup-nginx --no-setup-ssl --no-setup-mysql --enable --start --ip 0.0.0.0"
+sudo -u ghost-user -H sh -c "cd /var/www/ghost && ghost install --db=mysql --dbhost=localhost --dbuser=$DB_USER --dbpass=$DB_PASS --dbname=ghost --url=http://localhost:2368 --no-prompt --no-setup-nginx --no-setup-ssl --no-setup-mysql --enable --start --ip 0.0.0.0"
 rm /etc/sudoers.d/ghost-user
 msg_ok "Creating Service"
 
