@@ -626,6 +626,17 @@ advanced_settings() {
     exit_script
   fi
 
+  if ADV_TAGS=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set Custom Tags?[If you remove all, there will be no tags!]" 8 58 ${TAGS} --title "Advanced Tags" 3>&1 1>&2 2>&3); then
+    if [ -n "${ADV_TAGS}" ]; then
+        ADV_TAGS=${ADV_TAGS:-""} 
+        ADV_TAGS=$(echo "$ADV_TAGS" | tr -d '[:space:]')
+        TAGS="community-script;${ADV_TAGS}"
+    fi
+      echo -e "${NETWORK}${BOLD}${DGN}Tags: ${BGN}$TAGS${CL}"
+    else
+      exit_script
+  fi
+
   if [[ "$PW" == -password* ]]; then
     if (whiptail --backtitle "Proxmox VE Helper Scripts" --defaultno --title "SSH ACCESS" --yesno "Enable Root SSH Access?" 10 58); then
       SSH="yes"
@@ -820,7 +831,7 @@ build_container() {
     $PW
   "
   # This executes create_lxc.sh and creates the container and .conf file
-  bash -c "$(wget -qLO - https://raw.githubusercontent.com/fabrice1236/ProxmoxVE/ghost-hotfix/ct/create_lxc.sh)" || exit
+  bash -c "$(wget -qLO - https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/ct/create_lxc.sh)" || exit
 
   LXC_CONFIG=/etc/pve/lxc/${CTID}.conf
   if [ "$CT_TYPE" == "0" ]; then
@@ -882,7 +893,7 @@ http://dl-cdn.alpinelinux.org/alpine/latest-stable/community
 EOF'
     pct exec "$CTID" -- ash -c "apk add bash >/dev/null"
   fi
-  lxc-attach -n "$CTID" -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/fabrice1236/ProxmoxVE/ghost-hotfix/install/$var_install.sh)" || exit
+  lxc-attach -n "$CTID" -- bash -c "$(wget -qLO - https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/install/$var_install.sh)" || exit
 
 }
 
@@ -894,7 +905,7 @@ description() {
   DESCRIPTION=$(cat <<EOF
 <div align='center'>
   <a href='https://Helper-Scripts.com' target='_blank' rel='noopener noreferrer'>
-    <img src='https://raw.githubusercontent.com/fabrice1236/ProxmoxVE/ghost-hotfix/misc/images/logo-81x112.png' alt='Logo' style='width:81px;height:112px;'/>
+    <img src='https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/images/logo-81x112.png' alt='Logo' style='width:81px;height:112px;'/>
   </a>
 
   <h2 style='font-size: 24px; margin: 20px 0;'>${APP} LXC</h2>
